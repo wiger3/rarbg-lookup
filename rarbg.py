@@ -40,7 +40,8 @@ def str_to_size(size_s: str):
         return int(float(size_s[:-2]) * 1073741824)
     if size_s.endswith('B'):
         return int(size_s[:-1])
-    raise UserWarning("Failed to convert size: " + size_s)
+    print("Failed to convert size: " + size_s)
+    return -1
 
 con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
 cur = con.cursor()
@@ -48,6 +49,7 @@ cur = con.cursor()
 name = input("Search: ")
 options = ""
 limit = ""
+xxx = 'cat!="xxx" AND '
 args = name.split(' ')
 if 'cat:' in name:
     _args = args.copy()
@@ -84,16 +86,18 @@ if 'bigger:' in name:
     for x in _args:
         if x.startswith('bigger:'):
             size_s = x.split(':')[1]
-            size = str_to_size(size_s)
             args.remove(x)
+            size = str_to_size(size_s)
+            if size == -1: continue
             options += ' AND size>' + str(size)
 if 'smaller:' in name:
     _args = args.copy()
     for x in _args:
         if x.startswith('smaller:'):
             size_s = x.split(':')[1]
-            size = str_to_size(size_s)
             args.remove(x)
+            size = str_to_size(size_s)
+            if size == -1: continue
             options += ' AND size<' + str(size)
 if 'limit:' in name:
     _args = args.copy()
@@ -102,12 +106,20 @@ if 'limit:' in name:
             limit = x.split(':')[1]
             args.remove(x)
             limit = ' LIMIT ' + str(limit)
+if 'xxx:' in name:
+    _args = args.copy()
+    for x in _args:
+        if x.startswith('xxx:'):
+            porn = x.split(':')[1]
+            args.remove(x)
+            if porn.lower() in ['true', '1', 'yes', 'y', 't']:
+                xxx = ''
 
 name = ' '.join(args)
 
 name = name.replace(' ', '_')
 name = f"%{name}%"
-res = cur.execute(f'SELECT * FROM items WHERE cat!="xxx" AND title LIKE ?{options} ORDER BY dt DESC{limit}', (name,))
+res = cur.execute(f'SELECT * FROM items WHERE {xxx}title LIKE ?{options} ORDER BY dt DESC{limit}', (name,))
 print()
 torrents = res.fetchall()
 if len(torrents) != 0:
