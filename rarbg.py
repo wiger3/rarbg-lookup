@@ -115,11 +115,12 @@ if 'xxx:' in name:
             if porn.lower() in ['true', '1', 'yes', 'y', 't']:
                 xxx = ''
 
-name = ' '.join(args)
+name = '_'.join(args)
 
-name = name.replace(' ', '_')
+name = name.replace('\\', '\\\\')
+name = name.replace('%', '\%')
 name = f"%{name}%"
-res = cur.execute(f'SELECT * FROM items WHERE {xxx}title LIKE ?{options} ORDER BY dt DESC{limit}', (name,))
+res = cur.execute(f'SELECT * FROM items WHERE {xxx}title LIKE ? ESCAPE "\\"{options} ORDER BY dt DESC{limit}', (name,))
 print()
 torrents = res.fetchall()
 if len(torrents) != 0:
